@@ -1,14 +1,32 @@
 const multer = require('multer');
-const path = require('path');
 
+//storage
 const Storage = multer.diskStorage({
-    destination: (req, res, cb) => {
-        cb(null, './uploads')
-    },
-    filename: (req, file, cb) => {
-        console.log(file)
-        cb(null, Date.now() + path.extname(file.originalname))
+    destination: 'uploads',
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + path.extname(file.originalName));
     }
-})
+});
 
-exports.upload = multer({ storage: Storage }).single('testImage')
+const upload = multer({
+    storage: Storage
+}).single("testImage")
+
+app.post('/upload', (req, res) => {
+    upload(req, res, (err) => {
+        if (err) {
+            console.log(err);
+        } else {
+            const newImage = new ImageModel({
+                name: req.body.name,
+                image: {
+                    data: req.file.filename,
+                    contentType: 'image/png'
+                }
+            })
+            newImage.save()
+                .then(() => res.send("successfully uploaded"))
+                .catch((err) => console.log(err))
+        }
+    })
+})
